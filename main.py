@@ -1,89 +1,120 @@
-"""
-funzione che usiamo per contare quanti errori ci sono nella comparison
-fra due insertions (la desiderata e la ottenuta). S1 ed S2 sono le due insertions
-che stiamo analizzando.
-"""
-def conta_errori(s1, s2):
-    if len(s1) != len(s2):
-        return -1
-#se le lunghezze sono diverse, il programma si ferma subito (no indel, solo puntiformi)
-    errori = 0
-    for i in range(len(s1)):
-        """ range: Significato: "Per tutta la lunghezza".
+from tools import analizza, metti_spazi
+#importiamo le funzioni di cui abbiamo bisogno
 
-Cosa fa davvero: "Mi dà i numeri di posizione (0, 1, 2...) uno alla volta"."""
-        if s1[i] != s2[i]:
-            errori += 1
-    return errori
-"""controllo base per base, per tutta la lunghezza di S1 ed S2, che S1 ed S2 coincidano; 
-se una o piu basi sono diverse, ci sono stati uno o piu errori
-nell'insertion desiderata e in quella ottenuta. infine la funzione ci restituisce
-l'ammontare di errori rilevato"""
+def main():
+    print("=== PROGETTO INFORMATICA PER LE BIOTECNOLOGIE DI LEONARDO MASTRANGELI ===\n")
 
+#main e' la funzione cuore del progetto, e' quella che poi da' l'output. \n dice di andare a capo lasciando una riga vuota
+    # --- PARTE A1 ---
+    print("--- Parte A1 ---")
+    genoma = "GATACAGATACA"
+    insertion_point = "CA"
+    insertion = "TTTT"
 
+    print(f"Genoma: {genoma}")
+    print(f"Insertion Point: {insertion_point}")
+    print(f"Insertion: {insertion}")
+    print("-" * 30)
 
-"""
-questa altra funzione ha un ruolo estetico: per rendere piu chiaro il risultato,
-inseriamo uno spazio prima e dopo l'insertion, come ha fatto lei, prof.
-"""
-def metti_spazi(testo, indice, lunghezza_totale):
-    lunghezza_suffisso = lunghezza_totale - indice
-#calcola quanto e' lunga la parte che succede al taglio
-    fine_inserimento = len(testo) - lunghezza_suffisso
-#calcola dove finisce l'inserimento sottraendo al genoma editato la lunghezza del suo suffisso
-    pera1 = testo[:indice]
-#prende cio' che c'e' prima del punto di taglio (prefisso)
-    pera2 = testo[indice:fine_inserimento]
-#prende l'insertion (start:end)
-    pera3 = testo[fine_inserimento:]
-#prende cio' che c'e' dopo l'insertion (suffisso)
-    return f"{pera1} {pera2} {pera3}"
-#la f string ci permettera' poi di printare il nostro genoma editato con gli spazi gia' inseriti qui.
+    lista_edit_a1 = [
+        "GATACATTTTGATACA",
+        "GATACATATTGATACA"
+    ]
 
+    numero_edit = 1
+    for edit in lista_edit_a1:
+#edit variabile temporanea, prendeu n genoma dalla lista a ogni ciclo
+        err, idx = analizza(genoma, insertion_point, insertion, edit)
+#invochiamo la funzione analizza che ci restituisca err ed idx
+        visivo = edit
+        if idx != -1:
+#controlla se l'analisi ha funzionato
+            visivo = metti_spazi(edit, idx, len(genoma))
+#invochiamo funzione che aggiunge gli spazi. se l'inserzione e' avvenuta e idx!=-1, aggiorna visivo al genoma editato con gli spazi
+        print(f"Edit {numero_edit}: {visivo}")
+#stampa la versione con gli spazi di edit 1 o 2
+        if err == 0:
+            print("Risultato: CORRETTO (0 errori)")
+        elif err > 0:
+            print(f"Risultato: INCORRETTO ({err} errori)")
+        else:
+            print("Risultato: Non compatibile")
+#se non e' 0 ne' maggiore di 0, allora e' -1 e qualcosa e' andato storto
+        print() #stampa una riga vuota cosi' risultato edit 1 e 2 sono staccati
+        numero_edit += 1
 
+    print("=" * 40 + "\n")
+#moltiplico = 40 volte e poi vado a capo saltando una riga
 
-"""questa funzione e' il cuore del mio progetto:"""
-def analizza(genoma, punto, insertion, edit):
-    if len(edit) != len(genoma) + len(insertion):
-        return -1, -1
-#se la lunghezza del genoma editato non e' lunghezza originale+inserzione, qualcosa e' andato molto male
-#ci sono due -1 perche alla fine la funzione deve restituire non 1 ma ben 2 valori
-    posizioni = []
-    start = 0
-    while True:
-#ciclo infinito comodo per ripeterlo finche vogliamo
-        trovato = genoma.find(punto, start)
-#cerca il punto di inserzione dentro il genoma
-        if trovato == -1:
-            break
-#se li abbiamo trovati tutti, stop
-        taglio = trovato + len(punto)
-#find trova l'inizio dell'insertion, ma noi dobbiamo tagliare alla fine; se insertion e' CA non dobbiamo tagliare dopo C, ma dopo CA, quindi bisogna aggiungerci lunghezza insertion point
-        posizioni.append(taglio)
-#mette il punto di taglio trovato nella lista posizioni
-        start = trovato + 1
-#spostiamo il punto di ricerca un po piu avanti per vedere se ce ne sono altri
+    # --- PARTE A2 ---
+    print("--- Parte A2 ---")
 
-    miglior_err = 1000
-#appena troveremo un numero, quello diventera' il nuovo king of the hill, partiamo da 1000 per avere un numero a caso alto
-    miglior_idx = -1
-#se alla fine della ricerca non abbiamo trovato nessun punto valido, questa variabile rimarrà -1 e capiremo che l'operazione è fallita
-    for p in posizioni:
-        prefix = genoma[:p]
-        suffix = genoma[p:]
-#prendo le parti prima e dopo il punto di taglio
-        if edit.startswith(prefix) and edit.endswith(suffix):
-            parte_centrale = edit[len(prefix): len(edit) - len(suffix)] #(start:end, slicing)
-#l'insertion e' l'edit senza il prefisso e il suffisso
-            err = conta_errori(insertion, parte_centrale) #invocazione funzione
-#confronta l'insertion desiderato con quello che abbiamo effettivamente ottenuto
-            if err < miglior_err:
-                miglior_err = err
-                miglior_idx = p
-#se l'errore e' minore del minor error precedente, batte il record e diviene il minor numero di errori attuale
+    genoma2 = "CGGCATAACGGC"
 
-    if miglior_err == 1000:
-        return -1, -1
-#se non ci sono stati match, qualcosa e' nuovamente andato storto
-    return miglior_err, miglior_idx
-#se invece tutto e' andato bene, la funzione restituisce il minor numero di errori e il rispettivo indice
+    lista_punti = ["TA", "GC"]
+    lista_insertions = ["AAA", "CCC"]
+
+#Scenari: accoppiamo il primo punto con la prima inserzione, ecc.
+    scenari = [
+        ("TA", "AAA"),
+        ("GC", "CCC")
+    ]
+#TA deve stare con AAA, GC con CCC, tuple
+    print(f"Genoma: {genoma2}")
+    print(f"Insertion Points: {lista_punti}")
+    print(f"Insertions: {lista_insertions}")
+    print("\nCLASSIFICA FINALE:")
+    print("-" * 40)
+
+    lista_da_ordinare = [
+        "CGGCATAAAAACGGC",
+        "CGGCCCCATAACGGC",
+        "CGGCATAAACACGGC",
+        "CGGCTCCATAACGGC",
+        "CGGCATAGGGACGGC"
+    ]
+
+    classifica = []
+
+    for edit in lista_da_ordinare:
+        best_err = 1000
+        best_punto = ""
+        best_idx = -1
+#iniziamo il ciclo che analizza i vari edit partendo da 1000 errori cosi ogni errore minore e' preso
+        for insertion_point, insertion in scenari:
+            err, idx = analizza(genoma2, insertion_point, insertion, edit)
+#analizza segue le regole di pair imposte dalle tuple
+            if err != -1 and err < best_err:
+                best_err = err
+                best_punto = insertion_point
+                best_idx = idx
+
+        classifica.append((edit, best_err, best_punto, best_idx))
+        """il programma testa l'uno e l'altro insertion nei rispettivi insertion points, 
+        e quello che e' avvenuto davvero tra i due viene inserito nella lista classifica, 
+        e questo si ripete per tutti i genomi editati nella lista da ordinare. tieni a mente
+        che best_err fa riferimento al best_err di quello specifico edit (che se nulla e'
+        andato storto sara' sempre minore di 1000), NON al minor errore in assoluto, che
+        conosceremo in seguito grazie al sorting in base agli errori"""
+
+    classifica.sort(key=lambda pera_check: pera_check[1])
+    """operatore che ordina la classifica secondo il criterio di quanti errori ci sono. 
+    lambda dice che e' una funzione temporanea che non va definita mentre pera check[1] 
+    dice che nella classifica si vuole ordinare in base al parametro 1, cioe il numero di 
+    errori"""
+
+    posizione = 1
+
+    #inizializza un contatore per scrivere 1, 2 e 3 davanti ai risultati
+    for r in classifica:
+        testo_editato, err, punto, idx = r
+
+        if err == 1000:
+            print(f"{posizione}. {testo_editato}, # Nessun match valido") #nessuno scenario e' avvenuto
+        else:
+            testo_spazi = metti_spazi(testo_editato, idx, len(genoma2))
+            print(f"{posizione}. {testo_spazi}, # errori: {err} su insertion point {punto}")
+#ciclo for finisce quando finiscono i genomi editati in classifica
+        posizione += 1
+
+main() #niente dentro alla parentesi perche' tutte le variabili del programma sono incluse in funzione main
